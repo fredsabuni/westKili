@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>West Kilimanjaro - Farms</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f3f4f6;
+        }
+        #map {
+            height: 600px; /* Fixed height for map */
+            width: 100%;
+            max-width: 1000px; /* Max width for larger screens */
+            border-radius: 0.75rem; /* rounded-xl */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-lg */
+            margin-bottom: 1.5rem; /* mb-6 */
+        }
+        .info-box {
+            background-color: #ffffff;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            margin-bottom: 1.5rem;
+            width: 100%;
+            max-width: 1000px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            margin-right: 0.75rem;
+            border: 1px solid rgba(0,0,0,0.2); /* Add a slight border for visibility */
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-6 lg:p-8">
+
+    <div class="info-box text-gray-800">
+        <h1 class="text-2xl sm:text-3xl font-bold mb-4 text-center">West Kilimanjaro - Farms</h1>
+        <p class="text-center mb-4">
+            Below are Ben's and Isaya's plots visualized on a Google Map.
+            <br>
+            <br> 
+        </p>
+        <div class="flex flex-col sm:flex-row justify-center items-center space-y-2 sm:space-y-0 sm:space-x-8 text-lg font-semibold">
+            <div class="legend-item">
+                <div class="legend-color bg-blue-500 opacity-60"></div>
+                <span>Ben's Plot</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color bg-green-500 opacity-60"></div>
+                <span>Isaya's Plot</span>
+            </div>
+        </div> 
+    </div>
+
+    <div id="map" style="height: 600px; width: 100%; max-width: 1000px; border-radius: 0.75rem;"></div>
+<script>
+    mapboxgl.accessToken = 'pk.eyJ1IjoiZnJlZHlzYWJ1bmkiLCJhIjoiY200dTZ1em1mMGZqbzJsc2d6ZGNua2ZjYiJ9.4iLbSEz9-uaypcQbtJvVPA';
+
+    const bensPlotCoords = [
+        [37.03137, -2.96238],
+        [37.03254, -2.96066],
+        [37.03144, -2.96006],
+        [37.03027, -2.96241]
+    ];
+    const isayasPlotCoords = [
+        [37.03148, -2.95709],
+        [37.03027, -2.95956],
+        [37.03144, -2.96006],
+        [37.03257, -2.95771]
+    ];
+
+    // Center calculation (average)
+    const allCoords = bensPlotCoords.concat(isayasPlotCoords);
+    const center = allCoords.reduce((acc, cur) => [acc[0] + cur[0], acc[1] + cur[1]], [0, 0])
+        .map(x => x / allCoords.length);
+
+    const map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/outdoors-v12',
+        center: center,
+        zoom: 16
+    });
+
+    map.on('load', () => {
+        // Ben's Plot Polygon
+        map.addSource('bensPlot', {
+            'type': 'geojson',
+            'data': {
+                'type': 'Feature',
+                'geometry': {
+                    'type': 'Polygon',
+                    'coordinates': [[...bensPlotCoords, bensPlotCoords[0]]] // close the polygon
+                }
+            }
+        });
+        map.addLayer({
+            'id': 'bensPlot',
+            'type': 'fill',
+            'source': 'bensPlot',
+            'layout': {},
+            'paint': {
+                'fill-color': '#3B82F6',
+                'fill-opacity': 0.35
+            }
+        });
+        map.addLayer({
+            'id': 'bensPlot-outline',
+            'type': 'line',
+            'source': 'bensPlot',
+            'layout': {},
+            'paint': {
+                'line-color': '#3B82F6',
+                'line-width': 2
+            }
+        });
+
+        // Isaya's Plot Polygon
+        map.addSource('isayasPlot', {
+            'type': 'geojson',
+            'data': {
+                'type': 'Feature',
+                'geometry': {
+                    'type': 'Polygon',
+                    'coordinates': [[...isayasPlotCoords, isayasPlotCoords[0]]]
+                }
+            }
+        });
+        map.addLayer({
+            'id': 'isayasPlot',
+            'type': 'fill',
+            'source': 'isayasPlot',
+            'layout': {},
+            'paint': {
+                'fill-color': '#10B981',
+                'fill-opacity': 0.35
+            }
+        });
+        map.addLayer({
+            'id': 'isayasPlot-outline',
+            'type': 'line',
+            'source': 'isayasPlot',
+            'layout': {},
+            'paint': {
+                'line-color': '#10B981',
+                'line-width': 2
+            }
+        });
+
+        // Remove marker code and add click event for popups
+        // Helper: point-in-polygon test (ray-casting algorithm)
+        function pointInPolygon(point, vs) {
+            var x = point[0], y = point[1];
+            var inside = false;
+            for (var i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+                var xi = vs[i][0], yi = vs[i][1];
+                var xj = vs[j][0], yj = vs[j][1];
+                var intersect = ((yi > y) !== (yj > y)) &&
+                    (x < (xj - xi) * (y - yi) / (yj - yi + 0.0000001) + xi);
+                if (intersect) inside = !inside;
+            }
+            return inside;
+        }
+
+        map.on('click', function(e) {
+            const lngLat = [e.lngLat.lng, e.lngLat.lat];
+            // Check Ben's plot first
+            if (pointInPolygon(lngLat, bensPlotCoords)) {
+                new mapboxgl.Popup()
+                    .setLngLat(lngLat)
+                    .setHTML("Ben's Plot 13")
+                    .addTo(map);
+            } else if (pointInPolygon(lngLat, isayasPlotCoords)) {
+                new mapboxgl.Popup()
+                    .setLngLat(lngLat)
+                    .setHTML("Isaya's Plot 10")
+                    .addTo(map);
+            }
+        });
+    });
+</script>
+</body>
+</html>
